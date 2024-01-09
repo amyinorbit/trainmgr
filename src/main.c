@@ -8,10 +8,9 @@
  *===--------------------------------------------------------------------------------------------===
 */
 #include "stock.h"
+#include "views.h"
 #include <utils/helpers.h>
 
-void show_menu(db_t *db);
-void show_dbview(db_t *db);
 
 int main(int argc, const char **argv) {
 	if(argc < 2)
@@ -28,13 +27,7 @@ int main(int argc, const char **argv) {
 		return -1;
 	}
 	
-	show_dbview(&db);
-	// int *running_nums = safe_calloc(count, sizeof(int));
-	// stock_db_get_list(&db, running_nums, count);
-	// for(ssize_t i = 0; i < count; ++i) {
-	// 	fprintf(stderr, "%d\n", running_nums[i]);
-	// }
-	// free(running_nums);
+	show_menu(&db);
 	
 	stock_write_to_path("test.csv", &db);
 	stock_db_fini(&db);

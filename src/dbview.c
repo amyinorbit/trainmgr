@@ -8,7 +8,7 @@
  *===--------------------------------------------------------------------------------------------===
 */
 #include "ui.h"
-#include "stock.h"
+#include "views.h"
 #include <utils/helpers.h>
 
 typedef struct {
@@ -99,8 +99,8 @@ void show_dbview(db_t *db) {
 	};
 	update_veh_ids(&view);
 	
-	ui_start();
+	// ui_start();
 	while(dbview_update(&view)) {}
-	ui_end();
+	// ui_end();
 }
 
