@@ -57,7 +57,7 @@ stock_db_update(db_t *db, veh_t *veh);
 veh_t *
 stock_db_get(const db_t *db, int num);
 
-bool
+void
 stock_db_delete(db_t *db, veh_t *veh);
 
 static inline size_t

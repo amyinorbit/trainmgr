@@ -22,9 +22,6 @@ typedef struct {
 
 static void
 update_veh_ids(dbview_t *view) {
-	if(view->veh_ids && view->num_veh) {
-		free(view->veh_ids);
-	}
 	size_t num_veh = stock_db_get_count(view->db);
 	
 	view->veh_ids = safe_realloc(
@@ -46,6 +43,8 @@ dbview_draw_list(dbview_t *view) {
 	
 	for(int i = 0; i < h-2; ++i) {
 		hexes_cursor_go(0, i+1);
+		if(i == view->sel)
+			term_reverse(stdout);
 		
 		int idx = i + view->offset;
 		if(i < 0 || i >= view->num_veh) {
@@ -61,6 +60,7 @@ dbview_draw_list(dbview_t *view) {
 				ID_WIDTH, veh->num,
 				desc_width, desc_width, veh->desc);
 		}
+		term_style_reset(stdout);
 	}
 }
 
@@ -69,7 +69,7 @@ dbview_draw(dbview_t *view) {
 	hexes_clear_screen();
 	ui_title(" Rolling Stock Database - Vehicles");
 	dbview_draw_list(view);
-	ui_prompt(" [q]: return");
+	ui_prompt(" [A]dd    [E]dit    [D]elete    [R]eturn");
 }
 
 
@@ -78,13 +78,52 @@ dbview_update(dbview_t *view) {
 	UNUSED(view);
 	
 	int c = hexes_get_key_raw();
+	
+	veh_t *veh = NULL;
+	if(view->sel >= 0 && view->sel < view->num_veh) {
+		veh = stock_db_get(view->db, view->veh_ids[view->sel]);
+	}
+	
 	switch(c) {
 	case KEY_CTRL_C:
 	case KEY_CTRL_D:
 	case KEY_CTRL_Q:
 	case KEY_ESC:
-	case 'q':
+	case 'r':
 		return false;
+		
+	case 'e':
+	case 'E':
+		if(veh) {
+			show_addview(view->db, veh);
+			update_veh_ids(view);
+			view->sel = 0;
+		}
+		break;
+		
+	case 'd':
+	case 'D':
+	case KEY_BACKSPACE:
+		if(veh) {
+			stock_db_delete(view->db, veh);
+			update_veh_ids(view);
+			view->sel = 0;
+		}
+		break;
+		
+	case 'a':
+	case 'A':
+		show_addview(view->db, NULL);
+		update_veh_ids(view);
+		view->sel = 0;
+		break;
+		
+	case KEY_ARROW_DOWN:
+		view->sel = MIN(view->num_veh-1, view->sel+1);
+		break;
+	case KEY_ARROW_UP:
+		view->sel = MAX(0, view->sel-1);
+		break;
 	default:
 		break;
 	}
@@ -101,5 +140,7 @@ void show_dbview(db_t *db) {
 	do {
 		dbview_draw(&view);
 	} while(dbview_update(&view));
+	if(view.veh_ids)
+		free(view.veh_ids);
 }
 

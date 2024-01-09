@@ -88,6 +88,8 @@ typedef struct {
 	veh_t		*veh;
 	ui_field_t	fields[3];
 	int		sel;
+	
+	char		message[64];
 } addview_t;
 
 
@@ -126,7 +128,6 @@ addview_draw(addview_t *view) {
 	}
 	
 	// Draw the OK prompt
-	// "[      OK      ]"
 	if(view->sel == -1)
 		term_reverse(stdout);
 	x = MAX(0, (w/2) - 8);
@@ -136,26 +137,42 @@ addview_draw(addview_t *view) {
 	
 	ui_prompt(" [tab]: next field    [q]: cancel");
 	
-	hexes_show_cursor(view->sel != -1);
-	hexes_cursor_go(cur_x, cur_y);
+	if(!view->message[0]) {
+		hexes_show_cursor(view->sel != -1);
+		hexes_cursor_go(cur_x, cur_y);
+	} else {
+		hexes_show_cursor(false);
+		hexes_cursor_go(0, h-2);
+		term_set_bold(stdout, true);
+		term_set_bg(stdout, TERM_BRIGHT_YELLOW);
+		ui_line("Error: %s [press return to continue]", view->message);
+		term_style_reset(stdout);
+	}
+	
+	
 }
 
 static bool
 check_edit_conflict(db_t *db, veh_t *veh, int num) {
-	return stock_db_get(db, num) == veh;
+	veh_t *existing = stock_db_get(db, num);
+	return existing == NULL || existing == veh;
 }
 
 static bool
 validate_veh(addview_t *view) {
-	for(int i = 0; i < 3; ++i) {
-		if(!view->fields[i].len)
-			return false;
+	for(int i = 0; i < 2; ++i) {
+		if(view->fields[i].len) continue;
+		strncpy(view->message, "class and running number required", sizeof(view->message));
+		return false;
 	}
 	
 	
 	int num = atoi(view->fields[1].txt);
-	if(!check_edit_conflict(view->db, view->veh, num))
+	if(!check_edit_conflict(view->db, view->veh, num)) {
+		snprintf(view->message, sizeof(view->message),
+			"running number %d already in use", num);
 		return false;
+	}
 	
 	veh_t *veh = view->veh ?
 		view->veh :
@@ -197,11 +214,15 @@ addview_update(addview_t *view) {
 			view->sel = -1;
 		break;
 	case KEY_RETURN:
-		view->sel = (view->sel + 1);
-		if(view->sel == 3) {
-			if(validate_veh(view))
-				return true;
-			view->sel = -1;
+		if(view->message[0]) {
+			view->message[0] = '\0';
+		} else {
+			if(view->sel == -1) {
+				return !validate_veh(view);
+			}
+			view->sel = (view->sel + 1);
+			if(view->sel >= 3)
+				view->sel = -1;
 		}
 		break;
 	case KEY_ARROW_UP:

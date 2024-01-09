@@ -52,7 +52,8 @@ stock_db_add(avl_tree_t *db, veh_t *veh) {
 	return true;
 }
 
-bool stock_db_update(db_t *db, veh_t *veh) {
+bool
+stock_db_update(db_t *db, veh_t *veh) {
 	ASSERT(db != NULL);
 	ASSERT(veh != NULL);
 	return avl_update(db, veh);
@@ -64,6 +65,15 @@ stock_db_get(const avl_tree_t *db, int num) {
 	
 	veh_t search = {.num = num};
 	return avl_find(db, &search, NULL);
+}
+
+void
+stock_db_delete(db_t *db, veh_t *veh) {
+	ASSERT(db != NULL);
+	ASSERT(veh != NULL);
+	
+	avl_remove(db, veh);
+	free(veh);
 }
 
 size_t
