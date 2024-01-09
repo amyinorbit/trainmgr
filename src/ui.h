@@ -19,6 +19,8 @@ void
 ui_end();
 
 void
+ui_text(int w, const char *fmt, ...);
+void
 ui_line(const char *fmt, ...);
 void
 ui_title(const char *fmt, ...);

@@ -21,15 +21,11 @@ int main(int argc, const char **argv) {
 	avl_tree_t db;
 	stock_db_init(&db);
 	
-	ssize_t count = stock_load_from_path(db_path, &db);
-	if(count < 0) {
-		fprintf(stderr, "error reading rolling stock database\n");
-		return -1;
-	}
+	stock_load_from_path(db_path, &db);
 	
 	show_menu(&db);
 	
-	stock_write_to_path("test.csv", &db);
+	stock_write_to_path(db_path, &db);
 	stock_db_fini(&db);
 }
 

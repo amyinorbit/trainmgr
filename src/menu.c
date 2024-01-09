@@ -45,15 +45,18 @@ static void menu_draw(menu_data_t *menu) {
 	hexes_get_size(&menu->width, &menu->height);
 	hexes_clear_screen();
 	
-	ui_title(" Rolling Stock Database 1.0");
+	ui_title(" Rolling Stock Database");
 	menu_draw_items(menu);
-	ui_prompt(" Up/Down: move cursor     Return: select     Ctrl-C: exit");
+	ui_prompt(" [return]: select   [q]: exit");
 }
 
 static void dispatch_sel(int sel, db_t *db) {
 	switch(sel) {
 	case 0:
 		show_dbview(db);
+		break;
+	case 1:
+		show_addview(db);
 		break;
 	default:
 		break;
@@ -106,7 +109,9 @@ void show_menu(db_t *db) {
 	
 	ui_start();
 	
-	while(menu_update(&menu)) {}
+	do {
+		menu_draw(&menu);
+	} while(menu_update(&menu));
 	
 	ui_end();
 }

@@ -67,15 +67,15 @@ dbview_draw_list(dbview_t *view) {
 static void
 dbview_draw(dbview_t *view) {
 	hexes_clear_screen();
-	ui_title(" Rolling Stock Database 1.0");
+	ui_title(" Rolling Stock Database - Vehicles");
 	dbview_draw_list(view);
-	ui_prompt(" [1]: Delete   [Q]: Exit");
+	ui_prompt(" [q]: return");
 }
 
 
 static bool
 dbview_update(dbview_t *view) {
-	dbview_draw(view);
+	UNUSED(view);
 	
 	int c = hexes_get_key_raw();
 	switch(c) {
@@ -98,9 +98,8 @@ void show_dbview(db_t *db) {
 		.sel = 0,
 	};
 	update_veh_ids(&view);
-	
-	// ui_start();
-	while(dbview_update(&view)) {}
-	// ui_end();
+	do {
+		dbview_draw(&view);
+	} while(dbview_update(&view));
 }
 

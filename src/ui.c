@@ -22,10 +22,19 @@ ui_end() {
 	hexes_set_alternate(false);
 }
 
-static void draw_line(int w, const char *fmt, va_list args) {
+static void
+draw_line(int w, const char *fmt, va_list args) {
 	char buffer[512];
 	vsnprintf(buffer, sizeof(buffer), fmt, args);
 	printf("%-*.*s", w, w, buffer);
+}
+
+void
+ui_text(int w, const char *fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+	draw_line(w, fmt, args);
+	va_end(args);
 }
 
 void
