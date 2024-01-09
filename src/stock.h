@@ -51,8 +51,14 @@ stock_db_fini(db_t *db);
 bool
 stock_db_add(db_t *db, veh_t *veh);
 
+bool
+stock_db_update(db_t *db, veh_t *veh);
+
 veh_t *
 stock_db_get(const db_t *db, int num);
+
+bool
+stock_db_delete(db_t *db, veh_t *veh);
 
 static inline size_t
 stock_db_get_count(const db_t *db) {

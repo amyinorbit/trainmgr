@@ -12,6 +12,7 @@
 
 void
 ui_start() {
+	hexes_show_cursor(false);
 	hexes_set_alternate(true);
 	hexes_raw_start();
 }
@@ -20,6 +21,7 @@ void
 ui_end() {
 	hexes_raw_stop();
 	hexes_set_alternate(false);
+	hexes_show_cursor(true);
 }
 
 static void

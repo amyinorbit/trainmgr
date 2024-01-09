@@ -14,7 +14,7 @@
 
 void show_menu(db_t *db);
 void show_dbview(db_t *db);
-void show_addview(db_t *db);
+void show_addview(db_t *db, veh_t *veh);
 
 #endif /* ifndef _VIEWS_H_ */
 

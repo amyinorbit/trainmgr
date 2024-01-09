@@ -85,6 +85,7 @@ ui_field_input(ui_field_t *field, int c) {
 
 typedef struct {
 	db_t		*db;
+	veh_t		*veh;
 	ui_field_t	fields[3];
 	int		sel;
 } addview_t;
@@ -123,10 +124,25 @@ addview_draw(addview_t *view) {
 		hexes_cursor_go(x, y + i);
 		ui_field_draw(labels[i], f, i == view->sel, max_label_size, form_w);
 	}
+	
+	// Draw the OK prompt
+	// "[      OK      ]"
+	if(view->sel == -1)
+		term_reverse(stdout);
+	x = MAX(0, (w/2) - 8);
+	hexes_cursor_go(x, y + 4);
+	ui_text(MIN(16, w), "[      OK      ]");
+	
+	
 	ui_prompt(" [tab]: next field    [q]: cancel");
 	
-	
+	hexes_show_cursor(view->sel != -1);
 	hexes_cursor_go(cur_x, cur_y);
+}
+
+static bool
+check_edit_conflict(db_t *db, veh_t *veh, int num) {
+	return stock_db_get(db, num) == veh;
 }
 
 static bool
@@ -136,16 +152,24 @@ validate_veh(addview_t *view) {
 			return false;
 	}
 	
-	veh_t *veh = safe_calloc(1, sizeof(*veh));
+	
+	int num = atoi(view->fields[1].txt);
+	if(!check_edit_conflict(view->db, view->veh, num))
+		return false;
+	
+	veh_t *veh = view->veh ?
+		view->veh :
+		safe_calloc(1, sizeof(*veh));
+
+	veh->num = num;
 	strncpy(veh->class, view->fields[0].txt, sizeof(veh->class));
 	strncpy(veh->desc, view->fields[2].txt, sizeof(veh->desc));
-	veh->num = atoi(view->fields[1].txt);
 	
-	bool success = stock_db_add(view->db, veh);
-	if(!success) {
-		free(veh);
-	}
-	return !success;
+	if(view->veh)
+		stock_db_update(view->db, veh);
+	else
+		stock_db_add(view->db, veh);
+	return true;
 }
 
 static bool
@@ -174,8 +198,11 @@ addview_update(addview_t *view) {
 		break;
 	case KEY_RETURN:
 		view->sel = (view->sel + 1);
-		if(view->sel == 3)
-			return validate_veh(view);
+		if(view->sel == 3) {
+			if(validate_veh(view))
+				return true;
+			view->sel = -1;
+		}
 		break;
 	case KEY_ARROW_UP:
 		view->sel = MAX(0, view->sel - 1);
@@ -189,11 +216,24 @@ addview_update(addview_t *view) {
 	return true;
 }
 
+static void
+lift_field(ui_field_t *f, const char *src) {
+	strncpy(f->txt, src, f->cap-1);
+	f->txt[f->cap-1] = '\0';
+	f->len = f->cur = strlen(f->txt);
+}
+
+static void
+lift_field_num(ui_field_t *f, int num) {
+	f->len = snprintf(f->txt, sizeof(f->txt), "%d", num);
+	f->cur = f->len;
+}
 
 void
-show_addview(db_t *db) {
+show_addview(db_t *db, veh_t *veh) {
 	addview_t view = {
 		.db = db,
+		.veh = veh
 	};
 	
 	view.fields[0] = (ui_field_t){
@@ -208,6 +248,12 @@ show_addview(db_t *db) {
 		.numeric = false,
 		.cap = 30,
 	};
+	
+	if(veh) {
+		lift_field(&view.fields[0], veh->class);
+		lift_field(&view.fields[2], veh->desc);
+		lift_field_num(&view.fields[1], veh->num);
+	}
 	
 	do {
 		addview_draw(&view);

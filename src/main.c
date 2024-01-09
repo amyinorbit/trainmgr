@@ -8,6 +8,7 @@
  *===--------------------------------------------------------------------------------------------===
 */
 #include "stock.h"
+#include "ui.h"
 #include "views.h"
 #include <utils/helpers.h>
 
@@ -23,7 +24,9 @@ int main(int argc, const char **argv) {
 	
 	stock_load_from_path(db_path, &db);
 	
+	ui_start();
 	show_menu(&db);
+	ui_end();
 	
 	stock_write_to_path(db_path, &db);
 	stock_db_fini(&db);

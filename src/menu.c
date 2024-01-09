@@ -56,7 +56,7 @@ static void dispatch_sel(int sel, db_t *db) {
 		show_dbview(db);
 		break;
 	case 1:
-		show_addview(db);
+		show_addview(db, NULL);
 		break;
 	default:
 		break;
@@ -107,11 +107,7 @@ void show_menu(db_t *db) {
 	menu.items = options;
 	menu.db = db;
 	
-	ui_start();
-	
 	do {
 		menu_draw(&menu);
 	} while(menu_update(&menu));
-	
-	ui_end();
 }
