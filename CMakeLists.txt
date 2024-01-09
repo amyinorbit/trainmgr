@@ -7,7 +7,6 @@ add_subdirectory(lib/termutils)
 set(SRC
 	src/main.c
 	src/stock.c
-    src/menu.c
     src/ui.c
     src/dbview.c
     src/addview.c

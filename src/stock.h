@@ -18,27 +18,31 @@
 
 #define MAX_CLASS_LEN	(16)
 #define MAX_DESC_LEN	(32)
+#define MAX_LONG_DESC_LEN	(64)
 
 typedef avl_tree_t	db_t;
 
+// These are defined in a "priority" order - if one
 typedef enum {
-	CLASS_FIRST_CLASS	= 'A',
-	CLASS_STD_CLASS		= 'B',
-	CLASS_VAN		= 'D',
-	CLASS_PANORAMIC		= 'p',
-	
-	CLASS_CONTROL		= 't',
-	
-	CLASS_MET_LOK		= 'G',
-	CLASS_ELEC_LOK		= 'e',
-	CLASS_RACK_LOK		= 'h'
-} class_t;
+	VEH_TYPE_UNKNOWN,
+	VEH_TYPE_LOK,
+	VEH_TYPE_VAN,
+	VEH_TYPE_COACH,
+	VEH_TYPE_WAGON,
+	VEH_TYPE_CONTROL,
+	VEH_TYPE_RAILCAR,
+} veh_type_t;
 
 
 typedef struct {
 	int		num;
 	char		class[MAX_CLASS_LEN];
 	char		desc[MAX_DESC_LEN];
+	
+	char		combo_desc[MAX_DESC_LEN];
+	char		class_desc[MAX_LONG_DESC_LEN];
+	
+	veh_type_t	type;
 	avl_node_t	db_node;
 } veh_t;
 
@@ -59,6 +63,9 @@ stock_db_get(const db_t *db, int num);
 
 void
 stock_db_delete(db_t *db, veh_t *veh);
+
+void
+veh_describe(const veh_t *veh, char *buf, size_t cap);
 
 static inline size_t
 stock_db_get_count(const db_t *db) {

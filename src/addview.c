@@ -193,7 +193,7 @@ static bool
 addview_update(addview_t *view) {
 	UNUSED(view);
 	
-	int c = hexes_get_key_raw();
+	int c = hexes_get_key();
 	
 	if(view->sel >= 0 && view->sel < 3) {
 		ui_field_t *f = &view->fields[view->sel];

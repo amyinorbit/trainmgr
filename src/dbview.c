@@ -12,34 +12,59 @@
 #include <utils/helpers.h>
 
 typedef struct {
+	int	id;
+	veh_t	*veh;
+	bool	sel;
+} rec_t;
+
+typedef struct {
 	db_t	*db;
 	int	offset;
 	int	sel;
 	
-	int	*veh_ids;
+	rec_t	*veh;
 	int	num_veh;
 } dbview_t;
 
 static void
-update_veh_ids(dbview_t *view) {
+update_veh(dbview_t *view) {
 	size_t num_veh = stock_db_get_count(view->db);
 	
-	view->veh_ids = safe_realloc(
-		view->veh_ids,
-		num_veh * sizeof(int));
+	view->veh = safe_realloc(view->veh, num_veh * sizeof(rec_t));
 	view->num_veh = (int)num_veh;
-	stock_db_get_list(view->db, view->veh_ids, num_veh);
+	
+	int *veh_ids = safe_calloc(view->num_veh, sizeof(int));
+	stock_db_get_list(view->db, veh_ids, num_veh);
+	
+	for(int i = 0; i < view->num_veh; ++i) {
+		view->veh[i].id = veh_ids[i];
+		view->veh[i].veh = stock_db_get(view->db, veh_ids[i]);
+		view->veh[i].sel = false;
+	}
+	free(veh_ids);
 }
+
+static const char *type_name[] = {
+	[VEH_TYPE_UNKNOWN] = "unknown",
+	[VEH_TYPE_LOK] = "locomotive",
+	[VEH_TYPE_VAN] = "van",
+	[VEH_TYPE_COACH] = "coach",
+	[VEH_TYPE_WAGON] = "wagon",
+	[VEH_TYPE_CONTROL] = "control",
+	[VEH_TYPE_RAILCAR] = "railcar",
+};
 
 static void
 dbview_draw_list(dbview_t *view) {
 	
 #define ID_WIDTH	(6)
 #define CLASS_WIDTH	(12)
+#define TYPE_WIDTH	(12)
+#define SELECT_WIDTH	(2)
 
 	int w, h;
 	hexes_get_size(&w, &h);
-	int desc_width = w - (10 + ID_WIDTH + CLASS_WIDTH);
+	int desc_width = w - (13 + ID_WIDTH + CLASS_WIDTH + TYPE_WIDTH + SELECT_WIDTH);
 	
 	for(int i = 0; i < h-2; ++i) {
 		hexes_cursor_go(0, i+1);
@@ -48,17 +73,24 @@ dbview_draw_list(dbview_t *view) {
 		
 		int idx = i + view->offset;
 		if(i < 0 || i >= view->num_veh) {
-			ui_line("| %-*s | %-*s | %-*s |",
+			ui_line("| %c%-*s | %-*s | %-*s | %-*s%c |",
+				' ',
 				CLASS_WIDTH, "",
 				ID_WIDTH, "",
-				desc_width, "");
+				TYPE_WIDTH, "",
+				desc_width, "",
+				' ');
 		} else {
-			veh_t *veh = stock_db_get(view->db, view->veh_ids[idx]);
+			rec_t *rec = &view->veh[idx];
+			veh_t *veh = rec->veh;
 			if(!veh) continue;
-			ui_line("| %-*.*s | %*d | %-*.*s |",
+			ui_line("|%c %-*.*s | %*d | %-*s | %-*.*s %c|",
+				rec->sel ? '*' : ' ',
 				CLASS_WIDTH, CLASS_WIDTH, veh->class,
 				ID_WIDTH, veh->num,
-				desc_width, desc_width, veh->desc);
+				TYPE_WIDTH, type_name[veh->type],
+				desc_width, desc_width, veh->desc,
+				rec->sel ? '*' : ' ');
 		}
 		term_style_reset(stdout);
 	}
@@ -69,7 +101,7 @@ dbview_draw(dbview_t *view) {
 	hexes_clear_screen();
 	ui_title(" Rolling Stock Database - Vehicles");
 	dbview_draw_list(view);
-	ui_prompt(" [A]dd    [E]dit    [D]elete    [R]eturn");
+	ui_prompt(" [Q]uit    [A]dd    [E]dit    [D]elete    [S]elect for s[H]unting");
 }
 
 
@@ -80,42 +112,47 @@ dbview_update(dbview_t *view) {
 	int c = hexes_get_key_raw();
 	
 	veh_t *veh = NULL;
+	rec_t *rec = NULL;
 	if(view->sel >= 0 && view->sel < view->num_veh) {
-		veh = stock_db_get(view->db, view->veh_ids[view->sel]);
+		rec = &view->veh[view->sel];
+		veh = rec->veh;
 	}
 	
 	switch(c) {
 	case KEY_CTRL_C:
 	case KEY_CTRL_D:
 	case KEY_CTRL_Q:
-	case KEY_ESC:
-	case 'r':
+	case 'q':
+	case 'Q':
 		return false;
-		
 	case 'e':
 	case 'E':
 		if(veh) {
 			show_addview(view->db, veh);
-			update_veh_ids(view);
+			update_veh(view);
 			view->sel = 0;
 		}
 		break;
-		
 	case 'd':
 	case 'D':
 	case KEY_BACKSPACE:
 		if(veh) {
 			stock_db_delete(view->db, veh);
-			update_veh_ids(view);
+			update_veh(view);
 			view->sel = 0;
 		}
 		break;
-		
 	case 'a':
 	case 'A':
 		show_addview(view->db, NULL);
-		update_veh_ids(view);
+		update_veh(view);
 		view->sel = 0;
+		break;
+	case 's':
+	case 'S':
+		if(rec) {
+			rec->sel = !rec->sel;
+		}
 		break;
 		
 	case KEY_ARROW_DOWN:
@@ -136,11 +173,11 @@ void show_dbview(db_t *db) {
 		.offset = 0,
 		.sel = 0,
 	};
-	update_veh_ids(&view);
+	update_veh(&view);
 	do {
 		dbview_draw(&view);
 	} while(dbview_update(&view));
-	if(view.veh_ids)
-		free(view.veh_ids);
+	if(view.veh)
+		free(view.veh);
 }
 
