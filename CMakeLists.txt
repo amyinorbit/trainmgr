@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(train-mgr VERSION 1.0.0 LANGUAGES C)
+project(trainmgr VERSION 1.0.0 LANGUAGES C)
 
 add_subdirectory(lib/utils)
 add_subdirectory(lib/termutils)
