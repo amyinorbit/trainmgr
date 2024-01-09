@@ -1,0 +1,6 @@
+[submodule "lib/utils"]
+	path = lib/utils
+	url = git@github.com:amyinorbit/utils.git
+[submodule "lib/termutils"]
+	path = lib/termutils
+	url = git@github.com:amyinorbit/termutils.git

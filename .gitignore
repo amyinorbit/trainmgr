@@ -1,0 +1,5 @@
+build/
+*.ignore.*
+train-mgr
+*.o
+.DS_Store
