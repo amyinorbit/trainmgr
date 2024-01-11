@@ -42,6 +42,8 @@ typedef struct {
 	char		combo_desc[MAX_DESC_LEN];
 	char		class_desc[MAX_LONG_DESC_LEN];
 	
+	bool		in_use;
+	
 	veh_type_t	type;
 	avl_node_t	db_node;
 } veh_t;

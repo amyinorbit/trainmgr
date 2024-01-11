@@ -14,7 +14,6 @@
 typedef struct {
 	int	id;
 	veh_t	*veh;
-	bool	sel;
 } rec_t;
 
 typedef struct {
@@ -39,7 +38,6 @@ update_veh(dbview_t *view) {
 	for(int i = 0; i < view->num_veh; ++i) {
 		view->veh[i].id = veh_ids[i];
 		view->veh[i].veh = stock_db_get(view->db, veh_ids[i]);
-		view->veh[i].sel = false;
 	}
 	free(veh_ids);
 }
@@ -85,12 +83,12 @@ dbview_draw_list(dbview_t *view) {
 			veh_t *veh = rec->veh;
 			if(!veh) continue;
 			ui_line("|%c %-*.*s | %*d | %-*s | %-*.*s %c|",
-				rec->sel ? '*' : ' ',
+				veh->in_use ? '*' : ' ',
 				CLASS_WIDTH, CLASS_WIDTH, veh->class,
 				ID_WIDTH, veh->num,
 				TYPE_WIDTH, type_name[veh->type],
 				desc_width, desc_width, veh->desc,
-				rec->sel ? '*' : ' ');
+				veh->in_use ? '*' : ' ');
 		}
 		term_style_reset(stdout);
 	}
@@ -108,7 +106,7 @@ static void
 shunting_puzzle(dbview_t *view) {
 	int num_veh = 0;
 	for(int i = 0; i < view->num_veh; ++i) {
-		if(view->veh[i].sel)
+		if(view->veh[i].veh->in_use)
 			num_veh += 1;
 	}
 	
@@ -118,7 +116,7 @@ shunting_puzzle(dbview_t *view) {
 	const veh_t **stock = safe_calloc(num_veh, sizeof(veh_t *));
 	
 	for(int i = 0, j = 0; i < view->num_veh; ++i) {
-		if(view->veh[i].sel)
+		if(view->veh[i].veh->in_use)
 			stock[j++] = view->veh[i].veh;
 	}
 	
@@ -172,8 +170,8 @@ dbview_update(dbview_t *view) {
 		break;
 	case 's':
 	case 'S':
-		if(rec) {
-			rec->sel = !rec->sel;
+		if(veh) {
+			veh->in_use = !veh->in_use;
 		}
 		break;
 		
@@ -198,7 +196,6 @@ void show_dbview(db_t *db) {
 	dbview_t view = {
 		.db = db,
 		.offset = 0,
-		.sel = 0,
 	};
 	update_veh(&view);
 	do {

@@ -282,14 +282,19 @@ stock_load_from_path(const char *path, avl_tree_t *db) {
 }
 
 static veh_t *
-parse_one_veh(char *comps[3]) {
+parse_one_veh(char **comps, int offset) {
 	veh_t *veh = safe_calloc(1, sizeof(*veh));
-	veh->num = atoi(comps[0]);
+	if(offset)
+		veh->in_use = comps[0][0] == 'x';
+	else
+		veh->in_use = false;
 	
-	str_trim_space(comps[1]);
-	strncpy(veh->class, comps[1], sizeof(veh->class));
-	str_trim_space(comps[2]);
-	strncpy(veh->desc, comps[2], sizeof(veh->desc));
+	veh->num = atoi(comps[offset+0]);
+	
+	str_trim_space(comps[offset+1]);
+	strncpy(veh->class, comps[offset+1], sizeof(veh->class));
+	str_trim_space(comps[offset+2]);
+	strncpy(veh->desc, comps[offset+2], sizeof(veh->desc));
 	return veh;
 }
 
@@ -306,12 +311,12 @@ stock_load_from_file(FILE *f, avl_tree_t *db) {
 		if(line[0] == '#')
 			continue;
 		
-		char *comps[3];
-        	unsigned n_comps = str_split_inplace(line, ',', comps, 3);
+		char *comps[4];
+        	unsigned n_comps = str_split_inplace(line, ',', comps, 4);
 		if(n_comps < 3)
 			continue;
 		
-		veh_t *veh = parse_one_veh(comps);
+		veh_t *veh = parse_one_veh(comps, n_comps > 3);
 		if(!veh)
 			continue;
 		if(!stock_db_add(db, veh))
@@ -341,7 +346,11 @@ stock_write_to_file(FILE *f, const avl_tree_t *db) {
 	ASSERT(f != NULL);
 	
 	for(const veh_t *veh = avl_first(db); veh; veh = AVL_NEXT(db, veh)) {
-		fprintf(f, "%d, %s, %s\n", veh->num, veh->class, veh->desc);
+		fprintf(f, "%c,%d, %s, %s\n",
+			veh->in_use ? 'x' : '-',
+			veh->num,
+			veh->class,
+			veh->desc);
 	}
 	return true;
 }
