@@ -11,11 +11,15 @@
 #include "ui.h"
 #include "views.h"
 #include <utils/helpers.h>
+#include <stdlib.h>
+#include <time.h>
 
 
 int main(int argc, const char **argv) {
 	if(argc < 2)
 		return -1;
+	
+	srand(time(0L));
 	
 	const char *db_path = argc >= 2 ? argv[1] : "";
 	

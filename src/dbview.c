@@ -104,6 +104,28 @@ dbview_draw(dbview_t *view) {
 	ui_prompt(" [Q]uit    [A]dd    [E]dit    [D]elete    [S]elect for s[H]unting");
 }
 
+static void
+shunting_puzzle(dbview_t *view) {
+	int num_veh = 0;
+	for(int i = 0; i < view->num_veh; ++i) {
+		if(view->veh[i].sel)
+			num_veh += 1;
+	}
+	
+	if(!num_veh)
+		return;
+	
+	const veh_t **stock = safe_calloc(num_veh, sizeof(veh_t *));
+	
+	for(int i = 0, j = 0; i < view->num_veh; ++i) {
+		if(view->veh[i].sel)
+			stock[j++] = view->veh[i].veh;
+	}
+	
+	show_shuntview(view->db, stock, num_veh);
+	free(stock);
+}
+
 
 static bool
 dbview_update(dbview_t *view) {
@@ -153,6 +175,11 @@ dbview_update(dbview_t *view) {
 		if(rec) {
 			rec->sel = !rec->sel;
 		}
+		break;
+		
+		case 'h':
+		case 'H':
+		shunting_puzzle(view);
 		break;
 		
 	case KEY_ARROW_DOWN:

@@ -14,6 +14,7 @@
 
 void show_dbview(db_t *db);
 void show_addview(db_t *db, veh_t *veh);
+void show_shuntview(db_t *db, const veh_t **veh, int count);
 
 #endif /* ifndef _VIEWS_H_ */
 

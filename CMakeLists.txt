@@ -10,6 +10,7 @@ set(SRC
     src/ui.c
     src/dbview.c
     src/addview.c
+    src/shuntview.c
 )
 set(HDR
     src/stock.h

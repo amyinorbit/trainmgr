@@ -195,7 +195,7 @@ veh_find_type(veh_t *veh) {
 
 static void
 post_proc_veh(veh_t *veh) {
-	snprintf(veh->class_desc, sizeof(veh->class_desc), "%s %d", veh->class, veh->num);
+	snprintf(veh->combo_desc, sizeof(veh->combo_desc), "%s %d", veh->class, veh->num);
 	veh_find_type(veh);
 }
 
